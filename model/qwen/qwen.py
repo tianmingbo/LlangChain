@@ -9,7 +9,6 @@ from langchain_core.messages import SystemMessage, HumanMessage
 load_dotenv(override=True)
 qwen_api_key = os.getenv("DASHSCOPE_API_KEY")
 
-# 初始化 deepseek
 model = ChatTongyi(
     model="qwen-plus",
     max_retries=2,

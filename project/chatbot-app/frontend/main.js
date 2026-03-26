@@ -193,10 +193,78 @@ async function deleteSession(id) {
 function renderMessage(role, content) {
   const div = document.createElement("div");
   div.className = `message ${role}`;
-  div.textContent = `${role === "user" ? "你" : role === "assistant" ? "AI" : "系统"}: ${content}`;
+  const roleLabel = document.createElement("div");
+  roleLabel.className = "message-role";
+  roleLabel.textContent = role === "user" ? "你" : role === "assistant" ? "AI" : "系统";
+
+  const contentNode = document.createElement("div");
+  contentNode.className = "message-content";
+  setMessageContent(contentNode, role, content);
+
+  div.appendChild(roleLabel);
+  div.appendChild(contentNode);
   chatWindow.appendChild(div);
   chatWindow.scrollTop = chatWindow.scrollHeight;
   return div;
+}
+
+function escapeHtml(value) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function renderMarkdown(text) {
+  let input = escapeHtml(text || "");
+  const codeBlocks = [];
+
+  input = input.replace(/```([\w-]+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+    const idx = codeBlocks.length;
+    const cls = lang ? ` class="lang-${lang}"` : "";
+    codeBlocks.push(`<pre><code${cls}>${code}</code></pre>`);
+    return `@@CODE_BLOCK_${idx}@@`;
+  });
+
+  input = input.replace(/`([^`]+)`/g, "<code>$1</code>");
+  input = input.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  input = input.replace(/\*([^*]+)\*/g, "<em>$1</em>");
+  input = input.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+  input = input
+    .split("\n")
+    .map((line) => {
+      if (/^###\s+/.test(line)) return `<h3>${line.replace(/^###\s+/, "")}</h3>`;
+      if (/^##\s+/.test(line)) return `<h2>${line.replace(/^##\s+/, "")}</h2>`;
+      if (/^#\s+/.test(line)) return `<h1>${line.replace(/^#\s+/, "")}</h1>`;
+      if (/^\s*-\s+/.test(line)) return `<li>${line.replace(/^\s*-\s+/, "")}</li>`;
+      return line;
+    })
+    .join("\n");
+
+  input = input.replace(/(?:<li>.*<\/li>\n?)+/g, (block) => `<ul>${block}</ul>`);
+  input = input
+    .split(/\n{2,}/)
+    .map((chunk) => {
+      if (!chunk.trim()) return "";
+      if (chunk.startsWith("<h1>") || chunk.startsWith("<h2>") || chunk.startsWith("<h3>")) return chunk;
+      if (chunk.startsWith("<ul>") || chunk.startsWith("<pre>")) return chunk;
+      return `<p>${chunk.replaceAll("\n", "<br/>")}</p>`;
+    })
+    .join("");
+
+  input = input.replace(/@@CODE_BLOCK_(\d+)@@/g, (_, idx) => codeBlocks[Number(idx)] || "");
+  return input;
+}
+
+function setMessageContent(contentNode, role, content) {
+  if (role === "assistant" || role === "system") {
+    contentNode.innerHTML = renderMarkdown(content);
+  } else {
+    contentNode.textContent = content;
+  }
 }
 
 async function fetchRoles() {
@@ -339,6 +407,7 @@ chatForm.addEventListener("submit", async (e) => {
   let assistantText = "";
   let hasToken = false;
   const assistantNode = renderMessage("assistant", "思考中");
+  const assistantContentNode = assistantNode.querySelector(".message-content");
   assistantNode.classList.add("thinking");
 
   try {
@@ -349,7 +418,7 @@ chatForm.addEventListener("submit", async (e) => {
         assistantNode.classList.add("streaming");
       }
       assistantText += token;
-      assistantNode.textContent = `AI: ${assistantText || "..."}`;
+      setMessageContent(assistantContentNode, "assistant", assistantText || "...");
       chatWindow.scrollTop = chatWindow.scrollHeight;
     });
     sessionId = data.session_id;
@@ -361,7 +430,7 @@ chatForm.addEventListener("submit", async (e) => {
     await refreshSessionTitleFromSummary(sessionId);
     assistantNode.classList.remove("streaming");
     assistantNode.classList.remove("thinking");
-    assistantNode.textContent = `AI: ${assistantText || "（空响应）"}`;
+    setMessageContent(assistantContentNode, "assistant", assistantText || "（空响应）");
   } catch (err) {
     assistantNode.remove();
     renderMessage("system", `发送失败：${err.message}`);

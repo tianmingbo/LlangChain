@@ -1,0 +1,4 @@
+id,title,content
+1,LangChain 简介,LangChain 用于构建基于大模型的应用。
+2,CSVLoader 用法,CSVLoader 可以把每一行转换为一个 Document。
+3,RAG 场景,将结构化数据加载后可用于检索增强生成。

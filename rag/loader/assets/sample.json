@@ -1,0 +1,5 @@
+[
+  {"id": 1, "title": "LangChain 简介", "content": "LangChain 用于构建基于大模型的应用。"},
+  {"id": 2, "title": "JSON 加载", "content": "将 JSON 记录转换为 Document 列表。"},
+  {"id": 3, "title": "RAG 场景", "content": "结构化数据可用于检索增强生成。"}
+]

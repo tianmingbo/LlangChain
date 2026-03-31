@@ -1,0 +1,25 @@
+# Core LangChain stack
+langchain>=0.3
+langchain-core>=0.3
+langchain-community>=0.3
+
+# Model providers used in this repo
+langchain-openai>=0.2
+openai>=1.0
+langchain-deepseek>=0.1
+dashscope>=1.20
+
+# API / app runtime
+fastapi>=0.110
+uvicorn>=0.30
+pydantic>=2.0
+
+# Utilities used directly in code
+python-dotenv>=1.0
+requests>=2.31
+redis>=5.0
+beautifulsoup4>=4.12
+
+# Loader extras
+jq>=1.8
+unstructured>=0.14

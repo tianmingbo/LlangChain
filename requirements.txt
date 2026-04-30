@@ -28,9 +28,12 @@ pypdf~=6.10.2
 langchain-text-splitters~=1.1.1
 dotenv~=0.9.9
 huggingface_hub~=1.11.0
-numpy~=1.26.4
+numpy~=2.2.6
 # milvus-lite 目前依赖 pkg_resources，setuptools>=81 可能缺失该模块
 setuptools<81
 
 pymilvus~=2.6.12
 mcp~=1.27.0
+langchain-mcp-adapters>=0.1
+
+langgraph~=1.1.10
